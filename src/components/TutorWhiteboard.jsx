@@ -141,6 +141,8 @@
 import { Excalidraw } from "@excalidraw/excalidraw";
 import "@excalidraw/excalidraw/index.css";
 import { useEffect, useRef, useState } from "react";
+import { useDispatch } from "react-redux";
+import { setScene } from "../store/whiteboardSlice";
 import { socket } from "./socket";
 
 const ROOM_ID = "room1";
@@ -148,6 +150,7 @@ const ROOM_ID = "room1";
 function TutorWhiteboard() {
   const excalidrawRef = useRef(null);
   const [pendingStudent, setPendingStudent] = useState(null);
+  const dispatch = useDispatch();
 
   useEffect(() => {
     socket.connect();
@@ -169,6 +172,19 @@ function TutorWhiteboard() {
   const handleChange = (elements, appState) => {
     // 🔒 safety check
     if (!elements) return;
+
+    // update local redux store so refresh keeps the scene
+    dispatch(
+      setScene({
+        elements,
+        appState: {
+          scrollX: appState.scrollX,
+          scrollY: appState.scrollY,
+          zoom: appState.zoom,
+          viewBackgroundColor: appState.viewBackgroundColor || "#ffffff",
+        },
+      })
+    );
 
     socket.emit("whiteboard-update", {
       elements,

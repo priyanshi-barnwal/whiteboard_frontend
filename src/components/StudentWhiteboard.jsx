@@ -194,6 +194,8 @@
 import { Excalidraw } from "@excalidraw/excalidraw";
 import "@excalidraw/excalidraw/index.css";
 import { useEffect, useRef, useState } from "react";
+import { useDispatch, useSelector } from "react-redux";
+import { setScene, selectScene } from "../store/whiteboardSlice";
 import { socket } from "./socket";
 
 const ROOM_ID = "room1";
@@ -202,6 +204,9 @@ function StudentWhiteboard() {
   const excalidrawRef = useRef(null);
   const rafRef = useRef(null);
   const pendingSceneRef = useRef(null);
+
+  const dispatch = useDispatch();
+  const sceneFromStore = useSelector(selectScene);
 
   const [canDraw, setCanDraw] = useState(false);
   const [requestStatus, setRequestStatus] = useState("idle");
@@ -233,17 +238,28 @@ function StudentWhiteboard() {
         rafRef.current = null;
         const latest = pendingSceneRef.current;
         if (!latest || !excalidrawRef.current) return;
-        try {
-          excalidrawRef.current.updateScene({
-            elements: latest.elements,
-            appState: {
-              ...latest.appState,
-              viewBackgroundColor: "#ffffff",
-            },
-          });
-        } catch (e) {
-          console.error("failed to update excalidraw scene:", e);
-        }
+          try {
+            excalidrawRef.current.updateScene({
+              elements: latest.elements,
+              appState: {
+                ...latest.appState,
+                viewBackgroundColor: "#ffffff",
+              },
+            });
+            // also persist incoming teacher updates into redux store so refresh retains it
+            try {
+              dispatch(
+                setScene({
+                  elements: latest.elements,
+                  appState: latest.appState || {},
+                })
+              );
+            } catch (e) {
+              // swallow non-fatal errors
+            }
+          } catch (e) {
+            console.error("failed to update excalidraw scene:", e);
+          }
       });
     };
 
