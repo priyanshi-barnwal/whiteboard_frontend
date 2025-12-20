@@ -141,8 +141,8 @@
 import { Excalidraw } from "@excalidraw/excalidraw";
 import "@excalidraw/excalidraw/index.css";
 import { useEffect, useRef, useState } from "react";
-import { useDispatch } from "react-redux";
-import { setScene } from "../store/whiteboardSlice";
+import { useDispatch, useSelector } from "react-redux";
+import { setScene, selectScene } from "../store/whiteboardSlice";
 import { socket } from "./socket";
 
 const ROOM_ID = "room1";
@@ -151,6 +151,8 @@ function TutorWhiteboard() {
   const excalidrawRef = useRef(null);
   const [pendingStudent, setPendingStudent] = useState(null);
   const dispatch = useDispatch();
+  const sceneFromStore = useSelector(selectScene);
+  const saveTimeoutRef = useRef(null);
 
   useEffect(() => {
     socket.connect();
@@ -166,25 +168,35 @@ function TutorWhiteboard() {
 
     return () => {
       socket.off("REQUEST_DRAW_ACCESS");
+      if (saveTimeoutRef.current) {
+        clearTimeout(saveTimeoutRef.current);
+        saveTimeoutRef.current = null;
+      }
     };
+  }, []);
+
+  // apply persisted scene (if any) on mount so refresh keeps the drawing for tutor
+  useEffect(() => {
+    if (sceneFromStore && excalidrawRef.current && sceneFromStore.elements?.length) {
+      try {
+        excalidrawRef.current.updateScene({
+          elements: sceneFromStore.elements,
+          appState: {
+            ...sceneFromStore.appState,
+            viewBackgroundColor: "#ffffff",
+          },
+        });
+      } catch (e) {
+        // non-fatal
+      }
+    }
+    // only run on mount; sceneFromStore is read once intentionally
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const handleChange = (elements, appState) => {
     // 🔒 safety check
     if (!elements) return;
-
-    // update local redux store so refresh keeps the scene
-    dispatch(
-      setScene({
-        elements,
-        appState: {
-          scrollX: appState.scrollX,
-          scrollY: appState.scrollY,
-          zoom: appState.zoom,
-          viewBackgroundColor: appState.viewBackgroundColor || "#ffffff",
-        },
-      })
-    );
 
     socket.emit("whiteboard-update", {
       elements,
@@ -195,6 +207,26 @@ function TutorWhiteboard() {
         viewBackgroundColor: appState.viewBackgroundColor || "#ffffff",
       },
     });
+
+    // debounce persisting to Redux/localStorage so we don't dispatch on every stroke
+    if (saveTimeoutRef.current) clearTimeout(saveTimeoutRef.current);
+    saveTimeoutRef.current = setTimeout(() => {
+      try {
+        dispatch(
+          setScene({
+            elements,
+            appState: {
+              scrollX: appState.scrollX,
+              scrollY: appState.scrollY,
+              zoom: appState.zoom,
+              viewBackgroundColor: appState.viewBackgroundColor || "#ffffff",
+            },
+          })
+        );
+      } catch (e) {
+        // swallow
+      }
+    }, 1000);
   };
 
   const allowAccess = () => {
@@ -237,6 +269,17 @@ function TutorWhiteboard() {
 
       <Excalidraw
         ref={excalidrawRef}
+        initialData={
+          sceneFromStore && sceneFromStore.elements && sceneFromStore.elements.length
+            ? {
+                elements: sceneFromStore.elements,
+                appState: {
+                  ...sceneFromStore.appState,
+                  viewBackgroundColor: "#ffffff",
+                },
+              }
+            : undefined
+        }
         onChange={handleChange}
       />
     </div>

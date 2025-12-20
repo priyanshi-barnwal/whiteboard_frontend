@@ -289,6 +289,25 @@ function StudentWhiteboard() {
     };
   }, []);
 
+  // apply persisted scene from redux/localStorage on mount so refresh keeps the drawing
+  useEffect(() => {
+    if (sceneFromStore && excalidrawRef.current && sceneFromStore.elements?.length) {
+      try {
+        excalidrawRef.current.updateScene({
+          elements: sceneFromStore.elements,
+          appState: {
+            ...sceneFromStore.appState,
+            viewBackgroundColor: "#ffffff",
+          },
+        });
+      } catch (e) {
+        // non-fatal
+      }
+    }
+    // only run on mount; sceneFromStore read once intentionally
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   const requestAccess = () => {
     socket.emit("REQUEST_DRAW_ACCESS", {
       roomId: ROOM_ID,
@@ -316,6 +335,17 @@ function StudentWhiteboard() {
 
       <Excalidraw
         ref={excalidrawRef}
+        initialData={
+          sceneFromStore && sceneFromStore.elements && sceneFromStore.elements.length
+            ? {
+                elements: sceneFromStore.elements,
+                appState: {
+                  ...sceneFromStore.appState,
+                  viewBackgroundColor: "#ffffff",
+                },
+              }
+            : undefined
+        }
         viewModeEnabled={!canDraw}
         zenModeEnabled={true}
         gridModeEnabled={false}
