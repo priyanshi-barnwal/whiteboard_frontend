@@ -6,9 +6,9 @@ export const socket = io(SOCKET_URL, {
   autoConnect: false,
   transports: ["websocket"],
   // reconnection options (tweak if needed)
-  reconnection: true,
-  reconnectionAttempts: 5,
-  reconnectionDelay: 1000,
+  // reconnection: true,
+  // reconnectionAttempts: 5,
+  // reconnectionDelay: 1000,
 });
 
-console.log("socket helper created, connecting to:", SOCKET_URL);
+//console.log("socket helper created, connecting to:", SOCKET_URL);
