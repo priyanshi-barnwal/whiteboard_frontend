@@ -153,21 +153,51 @@ function TutorWhiteboard() {
   const dispatch = useDispatch();
   const sceneFromStore = useSelector(selectScene);
   const saveTimeoutRef = useRef(null);
+  const prevElementsRef = useRef([]);
+  const bcRef = useRef(null);
 
   useEffect(() => {
     socket.connect();
 
-    socket.emit("join-room", {
-      roomId: ROOM_ID,
-      role: "tutor",
+    // ensure we emit join-room after socket actually connects
+    socket.on("connect", () => {
+      console.log("tutor socket connected", socket.id);
+      socket.emit("join-room", {
+        roomId: ROOM_ID,
+        role: "tutor",
+      });
+      console.log("tutor emitted join-room", ROOM_ID);
     });
+
+    try {
+      bcRef.current = new BroadcastChannel("whiteboard-sync");
+      bcRef.current.onmessage = () => {};
+    } catch (e) {
+      // ignore
+    }
 
     socket.on("REQUEST_DRAW_ACCESS", ({ studentId }) => {
       setPendingStudent(studentId);
     });
 
+    // debug: log any socket events to help trace delivery
+    try {
+      socket.onAny((event, ...args) => {
+        console.debug('[tutor socket event]', event, args && args.length ? args[0] : undefined);
+      });
+    } catch (e) {
+      // onAny may not exist in some client lib versions
+    }
+
     return () => {
       socket.off("REQUEST_DRAW_ACCESS");
+      try { socket.offAny && socket.offAny(); } catch (e) {}
+      try {
+        if (bcRef.current) {
+          bcRef.current.close();
+          bcRef.current = null;
+        }
+      } catch (e) {}
       if (saveTimeoutRef.current) {
         clearTimeout(saveTimeoutRef.current);
         saveTimeoutRef.current = null;
@@ -198,15 +228,42 @@ function TutorWhiteboard() {
     // 🔒 safety check
     if (!elements) return;
 
-    socket.emit("whiteboard-update", {
-      elements,
-      appState: {
-        scrollX: appState.scrollX,
-        scrollY: appState.scrollY,
-        zoom: appState.zoom,
-        viewBackgroundColor: appState.viewBackgroundColor || "#ffffff",
-      },
-    });
+    // Emit a small delta immediately for low-latency realtime updates
+    try {
+      const prev = prevElementsRef.current || [];
+      const prevMap = new Map(prev.map((e) => [e.id, e]));
+      const delta = elements.filter((e) => {
+        const p = prevMap.get(e.id);
+        return !p || JSON.stringify(p) !== JSON.stringify(e);
+      });
+
+      if (delta.length > 0) {
+        socket.emit("whiteboard-delta", {
+          roomId: ROOM_ID,
+          deltaElements: delta,
+        });
+
+        // broadcast to other tabs in same browser as well
+        if (bcRef.current) {
+          try {
+            bcRef.current.postMessage({ deltaElements: delta, senderId: socket.id });
+          } catch (e) {}
+        }
+      }
+
+      prevElementsRef.current = elements;
+    } catch (e) {
+      // fallback to full scene emit
+      socket.emit("whiteboard-update", {
+        elements,
+        appState: {
+          scrollX: appState.scrollX,
+          scrollY: appState.scrollY,
+          zoom: appState.zoom,
+          viewBackgroundColor: appState.viewBackgroundColor || "#ffffff",
+        },
+      });
+    }
 
     // debounce persisting to Redux/localStorage so we don't dispatch on every stroke
     if (saveTimeoutRef.current) clearTimeout(saveTimeoutRef.current);
@@ -223,6 +280,19 @@ function TutorWhiteboard() {
             },
           })
         );
+        // also emit a debounced full scene to server so other devices get a consistent full update
+        try {
+          socket.emit("whiteboard-update", {
+            roomId: ROOM_ID,
+            elements,
+            appState: {
+              scrollX: appState.scrollX,
+              scrollY: appState.scrollY,
+              zoom: appState.zoom,
+              viewBackgroundColor: appState.viewBackgroundColor || "#ffffff",
+            },
+          });
+        } catch (e) {}
       } catch (e) {
         // swallow
       }

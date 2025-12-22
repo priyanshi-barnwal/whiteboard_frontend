@@ -38,3 +38,4 @@ export const selectScene = (state) => ({
 });
 
 export default whiteboardSlice.reducer;
+
