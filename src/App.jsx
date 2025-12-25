@@ -1,16 +1,15 @@
-import { BrowserRouter, Routes, Route } from "react-router-dom";
-import TutorWhiteboard from "./components/TutorWhiteboard";
-import StudentWhiteboard from "./components/StudentWhiteboard";
-
-
+import RoomRouter from "../RoomRouter";
+import MyRoutes from "./routes/MyRoutes";
+import Header from "./components/Header";
 function App() {
   return (
-    <BrowserRouter>
-      <Routes>
-        <Route path="/tutor" element={<TutorWhiteboard />} />
-        <Route path="/student" element={<StudentWhiteboard />} />
-      </Routes>
-    </BrowserRouter>
+    <div>
+      <Header />
+
+       <MyRoutes />
+
+     
+    </div>
   );
 }
 

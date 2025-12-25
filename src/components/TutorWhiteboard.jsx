@@ -1,94 +1,116 @@
-// import { Excalidraw } from "@excalidraw/excalidraw";
-// import "@excalidraw/excalidraw/index.css";
-// import { io } from "socket.io-client";
-// import { useEffect, useRef } from "react";
-
-// const SOCKET_URL = import.meta.env.VITE_SOCKET_URL || "http://localhost:8080";
-// const socket = io(SOCKET_URL);
-// const ROOM_ID = "room1";
-
-// function TutorWhiteboard() {
-//   const excalidrawRef = useRef(null);
-
-//   useEffect(() => {
-//     socket.emit("join-room", {
-//       roomId: ROOM_ID,
-//       role: "tutor",
-//     });
-//   }, []);
-
-// const handleChange = (elements, appState) => {
-//   if (!elements || elements.length === 0) return;
-
-//   socket.emit("whiteboard-update", {
-//     elements,
-//     appState: {
-//       scrollX: appState.scrollX,
-//       scrollY: appState.scrollY,
-//       zoom: appState.zoom,
-//       viewBackgroundColor: appState.viewBackgroundColor,
-//     },
-//   });
-// };
-
-
-//   return (
-//     <div style={{ height: "100vh", width: "100vw" }}>
-//       <h2>Tutor Board</h2>
-//       <h1>This is the tutor's view</h1>
-//       <Excalidraw
-//         ref={excalidrawRef}
-//         onChange={handleChange}
-//       />
-//     </div>
-//   );
-// }
-
-// export default TutorWhiteboard;
-
 
 import { Excalidraw } from "@excalidraw/excalidraw";
 import "@excalidraw/excalidraw/index.css";
 import { io } from "socket.io-client";
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
+import { useParams } from "react-router-dom";
 
-const SOCKET_URL = import.meta.env.VITE_SOCKET_URL || "http://localhost:8080";
-const socket = io(SOCKET_URL);
-const ROOM_ID = "room1";
+const SOCKET_URL =
+  import.meta.env.VITE_SOCKET_URL || "http://localhost:5000";
 
 function TutorWhiteboard() {
-  const excalidrawRef = useRef(null);
+  const { roomId } = useParams();
+
+  const socketRef = useRef(null);
+  const lastEmitRef = useRef(0);
+  const excalidrawAPIRef = useRef(null);
+
+  const [pendingStudent, setPendingStudent] = useState(null);
 
   useEffect(() => {
-    socket.emit("join-room", {
-      roomId: ROOM_ID,
-      role: "tutor",
+    if (!roomId) return;
+
+    socketRef.current = io(SOCKET_URL, {
+      transports: ["websocket"],
+      query: {
+        roomId,
+        role: "tutor",
+      },
     });
-  }, []);
 
-const handleChange = (elements, appState) => {
-  if (!elements || elements.length === 0) return;
+    socketRef.current.on("whiteboard-sync", (scene) => {
+      excalidrawAPIRef.current?.updateScene(scene);
+    });
 
-  socket.emit("whiteboard-update", {
-    elements,
-    appState: {
-      scrollX: appState.scrollX,
-      scrollY: appState.scrollY,
-      zoom: appState.zoom,
-      viewBackgroundColor: appState.viewBackgroundColor,
-    },
-  });
-};
+    // 🔥 RECEIVE STUDENT REQUEST
+    socketRef.current.on("request-access", ({ studentId }) => {
+      setPendingStudent(studentId);
+    });
 
+    return () => socketRef.current?.disconnect();
+  }, [roomId]);
+
+  const handleChange = (elements, appState) => {
+    if (!socketRef.current) return;
+
+    const now = Date.now();
+    if (now - lastEmitRef.current < 50) return;
+    lastEmitRef.current = now;
+
+    socketRef.current.emit("whiteboard-update", {
+      elements,
+      appState: {
+        scrollX: appState.scrollX,
+        scrollY: appState.scrollY,
+        zoom: appState.zoom,
+        viewBackgroundColor: appState.viewBackgroundColor,
+      },
+    });
+  };
+
+  const handleReady = (api) => {
+    excalidrawAPIRef.current = api;
+  };
+
+  const allowStudent = () => {
+    socketRef.current.emit("access-response", {
+      studentId: pendingStudent,
+      status: "approved",
+    });
+    setPendingStudent(null);
+  };
+
+  const denyStudent = () => {
+    socketRef.current.emit("access-response", {
+      studentId: pendingStudent,
+      status: "denied",
+    });
+    setPendingStudent(null);
+  };
 
   return (
-    <div style={{ height: "100vh", width: "100vw" }}>
+    <div style={{ height: "100vh", width: "100vw", position: "relative" }}>
       <h2>Tutor Board</h2>
-      <h1>This is the tutor's view</h1>
+
       <Excalidraw
-        ref={excalidrawRef}
+        excalidrawAPI={handleReady}
         onChange={handleChange}
       />
+
+      {pendingStudent && (
+        <div
+          style={{
+            position: "absolute",
+            top: "80px",
+            right: "20px",
+            background: "#fff",
+            padding: "16px",
+            borderRadius: "8px",
+            boxShadow: "0 6px 18px rgba(0,0,0,0.25)",
+            zIndex: 9999,
+          }}
+        >
+          <p>Student is requesting access</p>
+
+          <button onClick={allowStudent} style={{ marginRight: "8px" }}>
+            Allow
+          </button>
+
+          <button onClick={denyStudent}>
+            Deny
+          </button>
+        </div>
+      )}
     </div>
   );
 }

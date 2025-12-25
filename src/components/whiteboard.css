@@ -1,0 +1,26 @@
+Bottom-center toolbar for Excalidraw
+
+.excalidraw {
+  position: relative;
+}
+
+/* Toolbar wrapper */
+.excalidraw .App-toolbar {
+  position: fixed !important;
+  bottom: 20px;
+  top: auto !important;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 1000;
+}
+
+/* Optional: rounded + shadow */
+.excalidraw .App-toolbar__container {
+  border-radius: 14px;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.18);
+}
+
+/* Prevent canvas from hiding behind toolbar */
+.excalidraw .canvas-container {
+  padding-bottom: 110px;
+}
