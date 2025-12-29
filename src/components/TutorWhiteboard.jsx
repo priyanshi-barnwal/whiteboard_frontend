@@ -14,6 +14,7 @@ function TutorWhiteboard() {
   const socketRef = useRef(null);
   const lastEmitRef = useRef(0);
   const excalidrawAPIRef = useRef(null);
+  const isRemoteUpdateRef = useRef(false);
 
   const [pendingStudent, setPendingStudent] = useState(null);
 
@@ -28,8 +29,14 @@ function TutorWhiteboard() {
       },
     });
 
+    // 🔥 Receive updates from students (or server sync)
     socketRef.current.on("whiteboard-sync", (scene) => {
+      isRemoteUpdateRef.current = true;
       excalidrawAPIRef.current?.updateScene(scene);
+      // Reset flag after a short delay to allow scene update to complete
+      setTimeout(() => {
+        isRemoteUpdateRef.current = false;
+      }, 100);
     });
 
     // 🔥 RECEIVE STUDENT REQUEST
@@ -42,6 +49,8 @@ function TutorWhiteboard() {
 
   const handleChange = (elements, appState) => {
     if (!socketRef.current) return;
+    // 🔥 Skip if this change came from a remote update (student)
+    if (isRemoteUpdateRef.current) return;
 
     const now = Date.now();
     if (now - lastEmitRef.current < 50) return;
