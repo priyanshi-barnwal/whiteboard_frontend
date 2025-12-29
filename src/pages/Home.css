@@ -1,4 +1,4 @@
-.home-container {
+/* .home-container {
   min-height: 100vh;
   padding: 40px;
   background: linear-gradient(180deg, #eef2f6, #e9eef3);
@@ -85,6 +85,119 @@
 }
 
 .copy-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.loading-text {
+  margin-top: 30px;
+  font-weight: 500;
+}
+
+.error-text {
+  color: red;
+  margin-bottom: 20px;
+} */
+
+
+.home-container {
+  min-height: 100vh;
+  padding: 40px;
+  background: linear-gradient(180deg, #eef2f6, #e9eef3);
+  font-family: "Segoe UI", sans-serif;
+}
+
+.home-title {
+  font-size: 40px;
+  font-weight: 600;
+  color: #2d2d2d;
+  margin-bottom: 50px;
+}
+
+.card-wrapper {
+  display: flex;
+  gap: 40px;
+  justify-content: center;
+}
+
+.card {
+  width: 420px;
+  background: #ffffff;
+  border-radius: 24px;
+  padding: 30px;
+  box-shadow: 0 25px 60px rgba(0, 0, 0, 0.12);
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.card h2 {
+  font-size: 22px;
+  font-weight: 600;
+  color: #333;
+}
+
+.card input {
+  width: 100%;
+  padding: 14px;
+  border-radius: 12px;
+  border: 2px solid #ddd;
+  font-size: 14px;
+}
+
+.btn {
+  padding: 14px;
+  border-radius: 14px;
+  font-size: 16px;
+  font-weight: 600;
+  color: #fff;
+  border: none;
+  cursor: pointer;
+}
+
+.tutor-btn {
+  background: linear-gradient(135deg, #6a5acd, #7b68ee);
+}
+
+.copy-btn {
+  margin-top: 8px;
+  padding: 12px;
+  border-radius: 14px;
+  font-size: 14px;
+  font-weight: 600;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.tutor-copy {
+  background: #6a5acd;
+  color: white;
+}
+
+.student-copy {
+  background: #3baea0;
+  color: white;
+}
+
+.open-btn {
+  padding: 12px;
+  border-radius: 14px;
+  font-size: 14px;
+  font-weight: 600;
+  border: none;
+  cursor: pointer;
+  color: white;
+}
+
+.tutor-open {
+  background: linear-gradient(135deg, #ff8c00, #ff6a00);
+}
+
+.copy-btn:disabled,
+.open-btn:disabled {
   opacity: 0.5;
   cursor: not-allowed;
 }
