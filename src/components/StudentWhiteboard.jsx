@@ -15,6 +15,7 @@ function StudentWhiteboard() {
   const excalidrawAPIRef = useRef(null);
   const pendingSceneRef = useRef(null);
   const socketRef = useRef(null);
+  
 
   const [accessStatus, setAccessStatus] = useState("idle");
   // idle | waiting | approved | denied
@@ -89,6 +90,7 @@ function StudentWhiteboard() {
     });
   };
 
+
   return (
     <div
       style={{
@@ -104,7 +106,9 @@ function StudentWhiteboard() {
         onPointerDown={(e) =>
           accessStatus !== "approved" && e.preventDefault()
         }
-        // onChange={handleChange}
+        //onChange={handleChange}
+
+  //onChange={accessStatus === "approved" ? handleChange : undefined}
       />
 
       {accessStatus !== "approved" && (

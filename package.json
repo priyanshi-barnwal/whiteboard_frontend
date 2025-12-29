@@ -9,7 +9,7 @@
     "lint": "eslint .",
     "preview": "vite preview",
     "ws-server": "node server.js",
-    "start": "node server.js"
+    "start": "vite build"
   },
   "dependencies": {
     "@excalidraw/excalidraw": "^0.18.0",
