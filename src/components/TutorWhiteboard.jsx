@@ -88,38 +88,40 @@ function TutorWhiteboard() {
   };
 
   return (
-    <div style={{ height: "100vh", width: "100vw", position: "relative" }}>
-      <h2>Tutor Board</h2>
+    <div style={{ height: "100vh", width: "100vw", display: "flex", flexDirection: "column" }}>
+      <h2 style={{ margin: 0, padding: "10px 16px", background: "#f5f5f5", flexShrink: 0 }}>Tutor Board</h2>
 
-      <Excalidraw
-        excalidrawAPI={handleReady}
-        onChange={handleChange}
-      />
+      <div style={{ flex: 1, position: "relative" }}>
+        <Excalidraw
+          excalidrawAPI={handleReady}
+          onChange={handleChange}
+        />
 
-      {pendingStudent && (
-        <div
-          style={{
-            position: "absolute",
-            top: "80px",
-            right: "20px",
-            background: "#fff",
-            padding: "16px",
-            borderRadius: "8px",
-            boxShadow: "0 6px 18px rgba(0,0,0,0.25)",
-            zIndex: 9999,
-          }}
-        >
-          <p>Student is requesting access</p>
+        {pendingStudent && (
+          <div
+            style={{
+              position: "absolute",
+              top: "80px",
+              right: "20px",
+              background: "#fff",
+              padding: "16px",
+              borderRadius: "8px",
+              boxShadow: "0 6px 18px rgba(0,0,0,0.25)",
+              zIndex: 9999,
+            }}
+          >
+            <p>Student is requesting access</p>
 
-          <button onClick={allowStudent} style={{ marginRight: "8px" }}>
-            Allow
-          </button>
+            <button onClick={allowStudent} style={{ marginRight: "8px" }}>
+              Allow
+            </button>
 
-          <button onClick={denyStudent}>
-            Deny
-          </button>
-        </div>
-      )}
+            <button onClick={denyStudent}>
+              Deny
+            </button>
+          </div>
+        )}
+      </div>
     </div>
   );
 }
