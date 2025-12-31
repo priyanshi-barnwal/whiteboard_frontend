@@ -5,7 +5,6 @@
 // import MyPage from "../pages/MyPage";
 // const TutorWhiteboard = lazy(() => import("../components/TutorWhiteboard"));
 // const StudentWhiteboard = lazy(() => import("../components/StudentWhiteboard"));
-// import RoomRouter from "../../RoomRouter";
 
 // function MyRoutes() {
 //   return (
@@ -43,16 +42,14 @@
 
 // export default MyRoutes;
 
-
 import React, { Suspense, lazy } from "react";
 import { Routes, Route } from "react-router-dom";
 
 import Home from "../pages/Home";
 import MyPage from "../pages/MyPage";
-import RoomRouter from "../RoomRouter";
-
 const TutorWhiteboard = lazy(() => import("../components/TutorWhiteboard"));
 const StudentWhiteboard = lazy(() => import("../components/StudentWhiteboard"));
+import RoomRouter from "../../RoomRouter";
 
 function MyRoutes() {
   return (
@@ -61,7 +58,7 @@ function MyRoutes() {
       <Route path="/" element={<Home />} />
       <Route path="/mypage" element={<MyPage />} />
 
-      {/* Optional standalone routes */}
+      {/* Whiteboard routes - lazy loaded because they include Excalidraw and weights */}
       <Route
         path="/tutor"
         element={
@@ -70,7 +67,6 @@ function MyRoutes() {
           </Suspense>
         }
       />
-
       <Route
         path="/student"
         element={
@@ -80,11 +76,11 @@ function MyRoutes() {
         }
       />
 
-      {/* ✅ IMPORTANT: room route MUST be before "*" */}
-      <Route path="/room/:roomId" element={<RoomRouter />} />
-
       {/* Fallback */}
       <Route path="*" element={<h2>Page Not Found</h2>} />
+
+
+      <Route path="/room/:roomId" element={<RoomRouter />} />
     </Routes>
   );
 }
