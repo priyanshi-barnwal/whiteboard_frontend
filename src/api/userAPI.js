@@ -3,8 +3,7 @@
 // const BASE_URL = "http://10.140.56.126:5000/api/room"; // m51
 // const BASE_URL = "http://192.168.1.147:5000/api/room"; 
 
-const BASE_URL = process.env.VITE_SOCKET_URL + "/api/room";
-
+const BASE_URL = `${import.meta.env.VITE_API_URL}/api/room`;
 const commonHeaders = {
   "Content-Type": "application/json",
 };
