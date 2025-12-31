@@ -5,7 +5,7 @@ import { useEffect, useRef, useState } from "react";
 import { useParams, useSearchParams } from "react-router-dom";
 
 const SOCKET_URL =
-  import.meta.env.VITE_SOCKET_URL || "http://localhost:5000";
+  import.meta.env.VITE_SOCKET_URL || "https://whiteboard-backend-vtmo.onrender.com/";
 
 function StudentWhiteboard() {
   const { roomId } = useParams();

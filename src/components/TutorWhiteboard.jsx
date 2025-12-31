@@ -5,8 +5,12 @@ import { io } from "socket.io-client";
 import { useEffect, useRef, useState } from "react";
 import { useParams } from "react-router-dom";
 
+// const SOCKET_URL =
+//   import.meta.env.VITE_SOCKET_URL || "https://whiteboard-backend-vtmo.onrender.com/";
+
+
 const SOCKET_URL =
-  import.meta.env.VITE_SOCKET_URL || "http://localhost:5000";
+  import.meta.env.VITE_SOCKET_URL || "https://whiteboard-backend-vtmo.onrender.com/";
 
 function TutorWhiteboard() {
   const { roomId } = useParams();
