@@ -30,9 +30,10 @@
 
 import React, { Suspense, lazy } from "react";
 import { useParams, useSearchParams } from "react-router-dom";
+import TutorWhiteboard from "./src/components/TutorWhiteboard";
+import StudentWhiteboard from "./src/components/StudentWhiteboard";
+// something
 
-const TutorWhiteboard = lazy(() => import("./src/components/TutorWhiteboard"));
-const StudentWhiteboard = lazy(() => import("./src/components/StudentWhiteboard"));
 
 function RoomRouter() {
   const { roomId } = useParams();
